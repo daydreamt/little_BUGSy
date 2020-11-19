@@ -1,5 +1,3 @@
-open C1
-
 (* the rest is applications of this *)
 let simplest_graph = Unop (Variable "s", Observe, Dist (Variable "bernoulli", Bernoulli (Constant 0.5)));;
 let normal_graph = Unop (Variable "x",
@@ -15,7 +13,7 @@ let observed = Hashtbl.Poly.of_alist_exn [(Variable "x", Torch.Tensor.float_vec 
   (Variable "x", 6.)])
 *)
 
-let sampling_map = Map.Poly.of_alist_exn ((get_sample_from_graph observed 0 normal_graph) |> snd);;
+let sampling_map = Map.Poly.of_alist_exn ((get_sample_from_graph normal_graph) |> snd);;
 
 get_loglikelihoods_from_graph sampling_map observed normal_graph;;
 
@@ -23,7 +21,7 @@ get_loglikelihoods_from_graph sampling_map observed normal_graph;;
 - : float list = [-475.873338513688907]
 *)
 
-  
+let some_result = inference_by_naive_sampling observed normal_subgraph 1000;;
 variable_hist some_result "normal";;
 
 
