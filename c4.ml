@@ -1,30 +1,3 @@
-(* ************************************************************************ *)
-(* ************************************************************************ *)
-
-(* PPL 2: Consists of 
-1) constants
-2) random variables (bernoulli or normal or N(0,1))
-3) observed data 
-
-Shape of everything is scalar.
-No additions yet!
-
-Sample and Observe is the same statement now. But there is no need for it, in the graph, since we can condition on any variable, so we remove it, further simplifying our code!
-
-*)
-
-(* ************************************************************************ *)
-
-(* | Unop of variable * op1 * expr  *)
-
-type variable = Variable of string;;
-
-type op1 = Sample | Observe;;
-type op2 = Add | Multiply;;
-type dist = Normal of expr * expr | StandardNormal | Bernoulli of expr and
-     expr = Dist of variable * dist | Binop of variable * op2 * expr * expr | Constant of float;;
-
-(* ************************************************************************ *) 
 #require "torch.toplevel";;
 #require "core";;
 #require "matplotlib";;
@@ -33,6 +6,28 @@ open Core
 open Torch
 open Matplotlib
 
+(* ************************************************************************ *)
+(* ************************************************************************ *)
+
+(* PPL attempt #4: Consists of 
+1) constants
+2) random variables (bernoulli or normal or N(0,1))
+3) multiplications and additions.
+
+Sample and Observe is the same statement now. But there is no need for it, in the graph, since we can condition on any variable, so we removed it.
+
+Shape of everything is scalar.
+*)
+
+(* ************************************************************************ *)
+type variable = Variable of string;;
+
+type op1 = Sample | Observe;;
+type op2 = Add | Multiply;;
+type dist = Normal of expr * expr | StandardNormal | Bernoulli of expr and
+     expr = Dist of variable * dist | Binop of variable * op2 * expr * expr | Constant of float;;
+
+(* ************************************************************************ *) 
 let sample_standard_normal = Tensor.get_float1 (Tensor.normal_ ~mean:0. ~std:1. (Tensor.ones [1])) 0 ;;
 let sample_normal ~mu ~sigma = Tensor.get_float1 (Tensor.normal_ ~mean:mu ~std:sigma (Tensor.ones [1])) 0 ;;
 let sample_bernoulli ~p = if (Tensor.get_float1 (Tensor.rand [1]) 0 |> Float.compare p) = -1 then 0. else 1. ;;
@@ -137,7 +132,7 @@ let get_all_summary_statistics result_map =
     List.map keys ~f:(fun v -> (v, (summary_statistics_for_var result_map v)))
 ;;
 
-(* TODO: Wrong, until matplotlib dist can plot with weights... *)
+(* FIXME: Wrong, until matplotlib dist can plot with weights... *)
 let variable_hist result_map x = 
   Pyplot.hist ((List.map ~f:fst (Map.Poly.find_exn result_map (Variable x))) |> Array.of_list);
   Mpl.show()
