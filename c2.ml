@@ -1,7 +1,7 @@
 (* ************************************************************************ *)
 (* ************************************************************************ *)
 
-(* PPL 1: Consists of 
+(* PPL 2: Consists of 
 1) constants
 2) random variables (bernoulli or normal or N(0,1))
 3) observed data 
@@ -9,12 +9,13 @@
 Shape of everything is scalar.
 No additions yet!
 
-I think the grammar also needs some work: the Observe should only be leaves I think
+Sample and Observe is the same statement now.
 *)
 
 (* ************************************************************************ *)
 type variable = Variable of string;;
-type op1 = Sample | Observe;;
+
+type op1 = Sample;;
 type op2 = Add | Multiply;;
 type dist = Normal of expr * expr | StandardNormal | Bernoulli of expr and
      expr = Dist of variable * dist | Unop of variable * op1 * expr | Constant of float;;
@@ -59,24 +60,21 @@ let rec get_sample_from_graph_prob observed_map obs_idx g =
 let rec get_sample_from_graph g = 
     match g with 
     | Dist (v, Bernoulli p_expr) -> 
-    	let p, alist = (get_sample_from_graph p_expr) in
+    	let p, alist, w = (get_sample_from_graph p_expr) in
     	let bernoulli_sample = sample_bernoulli ~p in
-    	bernoulli_sample, alist @ [(v, bernoulli_sample)]
+    	bernoulli_sample, alist @ [(v, bernoulli_sample)], 0
     | Dist (v, StandardNormal) ->
     	let sn_sample = sample_standard_normal in
-    	sn_sample, [(v, sn_sample)]
+    	sn_sample, [(v, sn_sample)], 0
     | Dist (v, Normal(mu_expr, sigma_expr)) -> 
-    	let mu, mu_alist = get_sample_from_graph mu_expr in
-    	let sigma, sigma_alist = get_sample_from_graph sigma_expr in
+    	let mu, mu_alist, w_mu = get_sample_from_graph mu_expr in
+    	let sigma, sigma_alist, w_sigma = get_sample_from_graph sigma_expr in
     	let n_sample = sample_normal ~mu:(mu) ~sigma:(sigma) in
-    	n_sample, mu_alist @ sigma_alist @ [(v, n_sample)]
-    | Constant (c) -> c, []
+    	n_sample, mu_alist @ sigma_alist @ [(v, n_sample)], 0
+    | Constant (c) -> c, [], 0
     | Unop (v, Sample, e) -> 
-    	let sample_v, sample_alist = get_sample_from_graph e in
-    	sample_v, sample_alist @ [(v, sample_v)]
-    | Unop (v, Observe, e) -> 
-    	let sample_e, e_alist = get_sample_from_graph e in
-    	sample_e, e_alist @ [(v, sample_e)]
+    	let sample_v, sample_alist, w = get_sample_from_graph e in
+    	sample_v, sample_alist @ [(v, sample_v)], 0
     ;;
 
 (* Return a list of log-likelihoods: 1 for every Observe statement. *)
