@@ -3,7 +3,7 @@
 
 log_likelihood_normal (Tensor.float_vec [6.; 6.5; 6.5; 7.; 7.; 6.;])  0. 2.;;
 log_likelihood_bernoulli (Tensor.float_vec [0.; 0.; 0.; 1.; 1.; 0.; 0.;]) 0.2;;
-
+get_ess (Tensor.float_vec [0.5; 1.; 0.3;]);;
 
 let simplest_graph = (Dist (Variable "bernoulli", Bernoulli (Constant 0.5)));;
 (* let sum_graph_regression =  *)

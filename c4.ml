@@ -114,12 +114,16 @@ let rec cumsum ~init:accum weights = match weights with
     | x::[] -> [accum]
     | x::xs -> accum::(cumsum ~init:(accum +. x) xs)
 
+
+let get_ess weights = 1. /. (Tensor.pow weights ~exponent:(Scalar.f 2.) |> Tensor.sum |> Tensor.to_float0_exn)
+
 let summary_statistics_for_var result_map v = 
     let var_and_weight_list = Map.Poly.find_exn result_map v in
     let unnormalized_prob_sum = List.map ~f:(fun x-> Float.exp (snd x)) var_and_weight_list |> List.fold ~init:0. ~f:Float.add in
     let weighted_average = (List.fold ~init:0. ~f:(fun acc (sampled_x, log_w) -> acc +. (sampled_x *. Float.exp(log_w))) var_and_weight_list ) /. unnormalized_prob_sum in
     let weighted_variance = (List.fold ~init:0. var_and_weight_list ~f:(fun acc (sampled_x, log_w) -> acc +. (Float.square (sampled_x -. weighted_average)))) /. unnormalized_prob_sum in
-    [("mean", weighted_average); ("variance", weighted_variance)]
+    let ess = Map.Poly.find_exn result_map v |> List.map ~f:fst |> Array.of_list |> Tensor.of_float1 |> get_ess in
+    [("mean", weighted_average); ("variance", weighted_variance); ("ess", ess)]
     
     (* TODO:
     let log_probs = List.map ~f:(fun x-> -1. *. (snd x)) var_and_weight_list;;
