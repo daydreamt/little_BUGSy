@@ -115,7 +115,11 @@ let rec cumsum ~init:accum weights = match weights with
     | x::xs -> accum::(cumsum ~init:(accum +. x) xs)
 
 
-let get_ess weights = 1. /. (Tensor.pow weights ~exponent:(Scalar.f 2.) |> Tensor.sum |> Tensor.to_float0_exn)
+(* See Koller & Friedman 2009, page 498
+ENH: not dealing correctly with some of the small floats here, they end up ignored *)
+let get_ess weights = let numerator = Tensor.pow (Tensor.mul1 weights (Scalar.f 2.)) ~exponent:(Scalar.f 2.) |> Tensor.sum |> Tensor.to_float0_exn in
+		      let denominator = (Tensor.pow weights  ~exponent:(Scalar.f 2.)) |> Tensor.sum |> Tensor.square |> Tensor.to_float0_exn in
+		      numerator /. denominator;;
 
 let summary_statistics_for_var result_map v = 
     let var_and_weight_list = Map.Poly.find_exn result_map v in
